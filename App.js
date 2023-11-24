@@ -1,20 +1,98 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState, useEffect } from "react";
+import { StatusBar } from "expo-status-bar";
+import {
+  Text,
+  StyleSheet,
+  View,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  FlatList,
+} from "react-native";
+import SingleTodo from "./components/SingleTodo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function App() {
+const App = () => {
+  const [todo, setTodo] = useState("");
+  const [todos, setTodos] = useState([]);
+
+  const handleAddTodo = () => {
+    if (!todo) return;
+
+    setTodos([...todos, { id: Date.now(), text: todo }]);
+    setTodo("");
+  };
+
+  const fetchTodos = async () => {
+    const data = await AsyncStorage.getItem("todos");
+    if (data) setTodos(JSON.parse(data));
+  };
+
+  useEffect(() => {
+    fetchTodos();
+  }, []);
+
   return (
     <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
+      <Text style={styles.heading}>Welcome!</Text>
+      <View style={styles.inputContainer}>
+        <TextInput
+          onChangeText={(text) => setTodo(text)}
+          value={todo}
+          placeholder="Enter a Todo"
+          style={styles.input}
+        />
+        <TouchableOpacity onPress={handleAddTodo}>
+          <Text style={styles.button}>GO </Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ width: "100%", marginTop: 10 }}>
+        <FlatList
+          data={todos}
+          renderItem={({ item }) => (
+            <SingleTodo todo={item} todos={todos} setTodos={setTodos} />
+          )}
+          keyExtractor={(item) => item.id.toString()}
+        />
+      </View>
+
       <StatusBar style="auto" />
     </View>
   );
-}
-
+};
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    backgroundColor: "#F7DAD9",
+  },
+  heading: {
+    marginVertical: 10,
+    fontSize: 30,
+    fontWeight: "700",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    marginHorizontal: 10,
+    alignItems: "center",
+  },
+  input: {
+    flex: 1,
+    shadowColor: "black",
+    backgroundColor: "white",
+    elevation: 10,
+    marginRight: 5,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 50,
+  },
+  button: {
+    padding: 13,
+    backgroundColor: "white",
+    borderRadius: 50,
+    elevation: 10,
   },
 });
+
+export default App;
